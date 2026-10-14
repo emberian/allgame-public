@@ -31,6 +31,13 @@ class Chat:
     rooms: list[str] = field(default_factory=list)
     # Rooms where it speaks only when named.
     mention_only: list[str] = field(default_factory=list)
+    # Other AI residents in these rooms. Two bots riffing with no human
+    # steering can ping-pong a room forever; the judge is told who they are.
+    peers: list[str] = field(default_factory=list)
+    # Long-lived rooms ("stream>topic"): one conversation that persists
+    # across days and restarts, born from the room's history and reborn when
+    # it grows past limits.persistent_session_max_tokens.
+    persistent: list[str] = field(default_factory=list)
 
 
 @dataclass

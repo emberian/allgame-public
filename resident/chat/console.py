@@ -49,6 +49,9 @@ class MemoryChat:
         msg = self._store(self.resident_name, f"{self.resident_name.lower()}@local",
                           payload["content"], payload.get("to", ""),
                           payload.get("topic", ""), private)
+        # Echo it as an event, as Zulip does: the loop logs every message it
+        # sees, the resident's own included, from one place.
+        self._events.put({"type": "message", "message": msg})
         if self.on_post:
             self.on_post(msg)
         return {"result": "success", "id": msg["id"]}
