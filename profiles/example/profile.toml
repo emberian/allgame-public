@@ -1,0 +1,31 @@
+# An example resident. Copy this directory, change the name and identity,
+# and point chat at your own Zulip (or run with --console to try it locally).
+
+[resident]
+name = "Juniper"
+identity = "identity.md"
+# state_dir = "~/juniper_state"   # default: ~/<name>_state
+
+[models]
+main = "claude-opus-4-6"
+fallback = "claude-sonnet-4-6"
+judge = "claude-haiku-4-5"
+memory = "claude-sonnet-4-6"
+
+[chat]
+backend = "zulip"
+zuliprc = "~/.zuliprc-juniper"
+rooms = ["lounge"]
+mention_only = []
+
+[wake]
+solitude = true
+solitude_quiet_minutes = 45
+solitude_every_hours = 6
+turn_stall_minutes = 8
+
+[limits]
+message_soft_limit = 1000
+
+[tools]
+enabled = ["state", "search", "web", "messaging", "games", "timers", "sandbox", "harness"]

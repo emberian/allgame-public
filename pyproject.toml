@@ -1,0 +1,22 @@
+[project]
+name = "resident"
+version = "0.1.0"
+description = "A harness for AI residents of a group chat: members, not assistants."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.12"
+dependencies = [
+    "claude-agent-sdk>=0.2.128",
+    "requests>=2.31",
+    "zulip>=0.9",
+]
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["resident"]
