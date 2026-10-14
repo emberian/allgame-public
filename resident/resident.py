@@ -29,6 +29,7 @@ from resident.util import fmt_log_time, fmt_now, human_gap
 logger = logging.getLogger("resident")
 
 TYPING_PULSE = 8
+TYPING_STALL = 300
 
 
 def room_of(message: dict) -> tuple[str, str]:
@@ -190,12 +191,21 @@ class Resident:
     # ---- typing -----------------------------------------------------------------
 
     def _typing_pulse(self, stream, topic) -> threading.Event:
-        """Show typing while composing; renew the floor with each pulse, and
-        stop the moment the floor is no longer ours."""
+        """Show typing while composing, renewing the floor with each pulse.
+
+        It stops on SILENCE, not on the clock: a turn that is still producing
+        model output or running tools is working, however long it takes, and
+        the indicator says so. Only TYPING_STALL seconds with no sign of life
+        (a stuck turn) makes it give up early."""
         stop = threading.Event()
+        started = time.time()
 
         def pulse():
             while not stop.is_set():
+                if time.time() - max(started, self.engine.last_progress) > TYPING_STALL:
+                    logger.warning(f"Typing in #{stream}>{topic}: no progress for "
+                                   f"{TYPING_STALL}s — stopping")
+                    break
                 self.chat.set_typing_status({"op": "start", "type": "stream",
                                              "to": stream, "topic": topic})
                 # A turn taken without the floor (because it was named) has

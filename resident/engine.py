@@ -26,6 +26,7 @@ import difflib
 import json
 import logging
 import threading
+import time
 
 from resident import llm, profile
 from resident.tools import registry
@@ -53,6 +54,7 @@ class Engine:
         self.visible = False
         self.context_tokens = 0
         self.refused: str | None = None
+        self.last_progress = 0.0
         self.lock = threading.Lock()
         self.tools = registry.enabled(profile.current().tools)
         self.server = self._build_server()
@@ -73,7 +75,9 @@ class Engine:
                         return _mcp({"content": "You already posted essentially this "
                                      "reply this turn, and it landed. Don't re-send.",
                                      "is_error": True})
+                self.last_progress = time.time()
                 result = await asyncio.to_thread(registry.run, t.name, args, self.ctx)
+                self.last_progress = time.time()
                 if not result.get("is_error"):
                     if t.name in ("send_message", "send_dm"):
                         self.sends.append(str(args.get("content", "")))
@@ -131,6 +135,7 @@ class Engine:
             text += "\n\n[send_message to reply]"
 
         self.sends, self.visible, self.context_tokens, self.refused = [], False, 0, None
+        self.last_progress = time.time()   # heartbeat for the typing indicator
         self.ctx = registry.Context(state=self.r.state, chat=self.r.chat, stream=stream,
                                     topic=topic, sender=sender, message=trigger or {})
         from claude_agent_sdk import ClaudeAgentOptions
@@ -175,6 +180,7 @@ class Engine:
         from claude_agent_sdk import AssistantMessage, ResultMessage, query
         said = []
         async for msg in query(prompt=text, options=opts):
+            self.last_progress = time.time()
             if isinstance(msg, AssistantMessage):
                 for b in msg.content:
                     if getattr(b, "text", None) is not None and not hasattr(b, "thinking") \
