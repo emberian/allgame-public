@@ -28,4 +28,12 @@ turn_stall_minutes = 8
 message_soft_limit = 1000
 
 [tools]
+# Add "sandbox" (needs Docker and the [sandbox] image) or "harness" (self-editing:
+# run from your own git checkout) to opt in.
 enabled = ["state", "search", "web", "messaging", "games", "timers"]
+
+# [sandbox]
+# image = "resident-sandbox"   # docker build -t resident-sandbox -f docker/Dockerfile.sandbox .
+# network = "bridge"           # "none" for no network
+# memory = "2g"
+# timeout = 120

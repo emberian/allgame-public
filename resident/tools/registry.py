@@ -57,7 +57,8 @@ class Context:
     restart_requested: bool = False
 
 
-MODULES = ("messaging", "state_files", "search", "web", "games", "timers")
+MODULES = ("messaging", "state_files", "search", "web", "games", "timers",
+           "sandbox", "harness")
 
 
 def load_all():

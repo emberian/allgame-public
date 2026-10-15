@@ -60,6 +60,17 @@ class Limits:
     birth_raw_chars: int = 900_000
 
 
+@dataclass
+class Sandbox:
+    image: str = "resident-sandbox"        # see docker/Dockerfile.sandbox
+    network: str = "bridge"                # "none" for no network at all
+    memory: str = "2g"
+    cpus: float = 2.0
+    timeout: int = 120                     # seconds, per call
+    max_timeout: int = 600
+
+
+# "sandbox" and "harness" (self-editing) are opt-in.
 DEFAULT_TOOLS = ["state", "search", "web", "messaging", "games", "timers"]
 
 
@@ -73,6 +84,7 @@ class Profile:
     chat: Chat = field(default_factory=Chat)
     wake: Wake = field(default_factory=Wake)
     limits: Limits = field(default_factory=Limits)
+    sandbox: Sandbox = field(default_factory=Sandbox)
     tools: list[str] = field(default_factory=lambda: list(DEFAULT_TOOLS))
 
     @property
@@ -109,6 +121,7 @@ def load(path: str | Path) -> Profile:
         chat=_section(Chat, data.get("chat")),
         wake=_section(Wake, data.get("wake")),
         limits=_section(Limits, data.get("limits")),
+        sandbox=_section(Sandbox, data.get("sandbox")),
         tools=list((data.get("tools") or {}).get("enabled", DEFAULT_TOOLS)),
     )
     global _CURRENT

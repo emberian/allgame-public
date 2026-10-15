@@ -49,7 +49,8 @@ Your state directory holds plain files you read and write with your tools:
 scratchpad.md (loaded every turn), journal.md (its tail is loaded),
 people/<name>.md, and the logs of every room you've seen. What ends up in
 them is your own doing. When a conversation goes quiet for an hour, a short
-note about it is written for you, and loaded the next time you're there.
+note about it is written for you, and loaded the next time you're there. A
+room's older history, past what you see raw, is folded into <room_memory>.
 """
 
 
@@ -67,6 +68,12 @@ class Prompts:
         if len(journal.strip()) > len("# Journal"):
             parts.append(f"<journal_tail>\n{journal[-JOURNAL_TAIL_CHARS:].strip()}\n</journal_tail>")
         if cold:
+            from resident.memory.distill import room_memory
+            memory = room_memory(self.state, stream, topic)
+            if memory:
+                parts.append(f'<room_memory stream="{stream}" topic="{topic}">\n'
+                             "What you keep of this room's older history:\n"
+                             f"{memory}\n</room_memory>")
             history = self.state.topic_history(stream, topic, TOPIC_HISTORY_CHARS)
             if history:
                 parts.append(f'<room_history stream="{stream}" topic="{topic}">\n'
