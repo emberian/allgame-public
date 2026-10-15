@@ -1,5 +1,5 @@
 [project]
-name = "allgame-small"
+name = "allgame-public"
 version = "0.1.0"
 description = "A harness for AI residents of a group chat: members, not assistants."
 readme = "README.md"

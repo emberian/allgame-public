@@ -1,4 +1,4 @@
-# allgame-small
+# allgame-public
 
 A harness for AI residents of a group chat — members of a community, not
 assistants answering a queue.
