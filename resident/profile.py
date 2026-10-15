@@ -17,10 +17,10 @@ from pathlib import Path
 
 @dataclass
 class Models:
-    main: str = "claude-opus-4-6"          # conversation turns
-    fallback: str = "claude-sonnet-4-6"    # when the main model is unavailable
-    judge: str = "claude-haiku-4-5"        # "should I speak?" — cheap and fast
-    memory: str = "claude-sonnet-4-6"      # session notes and the distiller
+    main: str = "claude-opus-5-5"          # conversation turns
+    fallback: str = "claude-sonnet-5-5"    # when the main model is unavailable
+    judge: str = "claude-haiku-5-5"        # "should I speak?" — cheap and fast
+    memory: str = "claude-opus-5-5"      # session notes
 
 
 @dataclass
@@ -60,8 +60,7 @@ class Limits:
     birth_raw_chars: int = 900_000
 
 
-DEFAULT_TOOLS = ["state", "search", "web", "messaging", "games", "timers",
-                 "sandbox", "harness"]
+DEFAULT_TOOLS = ["state", "search", "web", "messaging", "games", "timers"]
 
 
 @dataclass

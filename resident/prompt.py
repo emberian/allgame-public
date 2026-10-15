@@ -7,6 +7,7 @@ each turn's own header instead (resident.py).
 """
 
 from resident import profile
+from resident.util import room_file
 from resident.config import JOURNAL_TAIL_CHARS, STREAM_ACTIVITY_CHARS, TOPIC_HISTORY_CHARS
 
 HOW_IT_WORKS = """## How talking works here
@@ -47,7 +48,8 @@ on repeat, or as a watch that wakes you only when the room has news.
 Your state directory holds plain files you read and write with your tools:
 scratchpad.md (loaded every turn), journal.md (its tail is loaded),
 people/<name>.md, and the logs of every room you've seen. What ends up in
-them is your own doing.
+them is your own doing. When a conversation goes quiet for an hour, a short
+note about it is written for you, and loaded the next time you're there.
 """
 
 
@@ -72,7 +74,7 @@ class Prompts:
             nearby = self.state.stream_activity(stream, STREAM_ACTIVITY_CHARS, exclude_topic=topic)
             if nearby:
                 parts.append(f'<elsewhere_in stream="{stream}">\n{nearby}\n</elsewhere_in>')
-            notes = self.state.read_file(f"sessions/{_room_file(stream, topic)}.md")
+            notes = self.state.read_file(f"sessions/{room_file(stream, topic)}.md")
             if notes:
                 parts.append(f"<your_notes_on_this_room>\n{notes[-6000:].strip()}\n"
                              "</your_notes_on_this_room>")
@@ -87,7 +89,3 @@ class Prompts:
                 f"so far:\n{history or '(nothing yet)'}\n"
                 "</room_history_for_a_long_conversation>")
 
-
-def _room_file(stream: str, topic: str) -> str:
-    from resident.util import safe_filename
-    return f"{safe_filename(stream)}__{safe_filename(topic)}"

@@ -135,8 +135,9 @@ class Resident:
             interim = self.state.messages_since(stream, topic, session.last_seen_msg_id,
                                                 set(ids), self.bot_name, INTERIM_MESSAGES_CHARS)
             if interim:
-                blocks.append("<said_since_your_last_turn>\n(you chose not to answer "
-                              f"these; context only)\n{interim}\n</said_since_your_last_turn>")
+                blocks.append("<said_since_your_last_turn>\n(your judge didn't wake "
+                              "you for these, so this is your first look)\n"
+                              f"{interim}\n</said_since_your_last_turn>")
         now = trigger.get("timestamp") or time.time()
         header = f"[now: {fmt_now(now)}"
         prev = session.last_msg_ts or self.state.previous_message_time(stream, topic, set(ids))
@@ -151,8 +152,8 @@ class Resident:
             session.participants.add(m.get("sender_full_name"))
         notes = self.judge.drain_remarks(stream, topic)
         if notes:
-            blocks.append("<judge_notes>\nYour judge, on messages it handled while "
-                          "you weren't looking:\n" + "\n".join(
+            blocks.append("<judge_notes>\nYour judge's asides on messages it "
+                          "didn't wake you for:\n" + "\n".join(
                               f"  · re {n['about']}: {n['remark']}" for n in notes)
                           + "\n</judge_notes>")
         if self.judge.last_remark:

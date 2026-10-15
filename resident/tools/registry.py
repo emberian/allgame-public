@@ -57,19 +57,14 @@ class Context:
     restart_requested: bool = False
 
 
-MODULES = ("messaging", "state_files", "search", "web", "games", "timers",
-           "sandbox", "harness")
+MODULES = ("messaging", "state_files", "search", "web", "games", "timers")
 
 
 def load_all():
     """Import every tool module so its @tool declarations register."""
     import importlib
     for m in MODULES:
-        try:
-            importlib.import_module(f"resident.tools.{m}")
-        except ModuleNotFoundError as e:
-            if e.name != f"resident.tools.{m}":
-                raise
+        importlib.import_module(f"resident.tools.{m}")
 
 
 def enabled(groups: list[str]) -> list[Tool]:
@@ -78,6 +73,7 @@ def enabled(groups: list[str]) -> list[Tool]:
 
 
 def run(name: str, args: dict, ctx: Context) -> dict:
+    load_all()
     t = TOOLS.get(name)
     if not t:
         return {"content": f"No tool named {name}.", "is_error": True}

@@ -39,7 +39,9 @@ def main():
 
     resident = Resident(chat, state)
     from resident import wake
+    from resident.memory import notes
     wake.start_all(resident)
+    notes.start(resident)
 
     from resident import loop
     if args.console:

@@ -11,6 +11,11 @@ def safe_filename(name: str) -> str:
     return s[:120] or "_"
 
 
+def room_file(stream: str, topic: str) -> str:
+    """One filename per room, for files kept per (stream, topic)."""
+    return f"{safe_filename(stream)}__{safe_filename(topic)}"
+
+
 def fmt_log_time(ts: float) -> str:
     """Short local timestamp for transcript lines: 'Oct 13 21:05'."""
     return datetime.fromtimestamp(ts).strftime("%b %d %H:%M")

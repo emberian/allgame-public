@@ -1,5 +1,5 @@
 """One-shot model calls for the harness's own machinery: the judge, session
-notes, the distiller. No tools, no session — one prompt in, text out.
+notes. No tools, no session — one prompt in, text out.
 
 These go through the Agent SDK, the same door the resident's turns use, so
 they share its credentials and limits (whatever ANTHROPIC_API_KEY or
