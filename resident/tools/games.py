@@ -18,6 +18,7 @@ that every resident reads and writes:
 
 import fcntl
 import json
+from pathlib import Path
 import logging
 import os
 from contextlib import contextmanager
@@ -29,7 +30,9 @@ from resident.tools.registry import tool
 
 logger = logging.getLogger("games")
 
-TABLE = SHARED_DIR / "table"
+# RESIDENT_TABLE_DIR: share a table that lives somewhere else (another
+# harness's, whose game files have the same shape).
+TABLE = Path(os.environ.get("RESIDENT_TABLE_DIR", SHARED_DIR / "table"))
 MAX_LOG = 400
 MAX_BOARD = 20_000
 
