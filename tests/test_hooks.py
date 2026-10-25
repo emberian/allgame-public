@@ -46,11 +46,12 @@ def test_session_lifetime_comes_from_the_profile(prof):
 
 def test_named_files_and_people_notes_are_loaded(prof, state):
     configure(prof, prompt={"files": ["sysadmin_inbox.md"], "file_chars": 50})
-    state.write_file("sysadmin_inbox.md", "old news " * 20 + "NEWEST LINE")
+    state.write_file("sysadmin_inbox.md", "old news\n" * 20 + "NEWEST LINE")
     state.write_file("people/ember.md", "likes rust and tulips")
     state.write_file("people/rowan.md", "not in this room")
     system = Prompts(state).system("lounge", "general", cold=True, people={"ember"})
     assert "NEWEST LINE" in system and system.count("old news") < 20
+    assert "earlier part of sysadmin_inbox.md isn't shown" in system
     assert "likes rust and tulips" in system and "not in this room" not in system
 
 

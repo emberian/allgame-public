@@ -33,6 +33,18 @@ def masked(text: str) -> str:
     return text
 
 
+def tail(text: str, max_chars: int, what: str = "the file") -> str:
+    """The end of a long text, cut at a line boundary and saying so — a cut
+    mid-sentence reads as a broken memory, not a window onto a longer one."""
+    if not max_chars or len(text) <= max_chars:
+        return text
+    cut = text[-max_chars:]
+    nl = cut.find("\n")
+    if 0 <= nl < len(cut) - 1:
+        cut = cut[nl + 1:]
+    return f"[… the earlier part of {what} isn't shown here; read_state_file has all of it]\n{cut}"
+
+
 def room_file(stream: str, topic: str) -> str:
     """One filename per room, for files kept per (stream, topic)."""
     return f"{safe_filename(stream)}__{safe_filename(topic)}"

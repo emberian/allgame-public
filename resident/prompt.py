@@ -7,7 +7,7 @@ each turn's own header instead (resident.py).
 """
 
 from resident import profile
-from resident.util import room_file, safe_filename
+from resident.util import room_file, safe_filename, tail
 from resident.config import STREAM_ACTIVITY_CHARS, TOPIC_HISTORY_CHARS
 
 HOW_IT_WORKS = """## How talking works here
@@ -64,15 +64,14 @@ class Prompts:
         for name in p.prompt.files:
             text = (self.state.read_file(name) or "").strip()
             if text:
-                parts.append(f'<file name="{name}">\n{text[-p.prompt.file_chars:]}\n</file>')
+                parts.append(f'<file name="{name}">\n{tail(text, p.prompt.file_chars, name)}\n</file>')
         scratch = (self.state.read_file("scratchpad.md") or "").strip()
         if scratch:
-            if p.prompt.scratchpad_chars:
-                scratch = scratch[-p.prompt.scratchpad_chars:]
+            scratch = tail(scratch, p.prompt.scratchpad_chars, "scratchpad.md")
             parts.append(f"<scratchpad>\n{scratch}\n</scratchpad>")
         journal = self.state.read_file("journal.md") or ""
         if len(journal.strip()) > len("# Journal"):
-            parts.append(f"<journal_tail>\n{journal[-p.prompt.journal_chars:].strip()}"
+            parts.append(f"<journal_tail>\n{tail(journal.strip(), p.prompt.journal_chars, 'journal.md')}"
                          "\n</journal_tail>")
         if cold:
             from resident.memory.distill import room_memory
