@@ -124,3 +124,17 @@ disallowed = ["mcp__search__delete"]
     assert p.engine.session_ttl_minutes == 30 and p.prompt.files == ["sysadmin_inbox.md"]
     assert p.mcp["search"]["url"] == "https://search.example/mcp"
     assert p.modules == ["private_ext"] and p.disallowed_tools == ["mcp__search__delete"]
+
+
+def test_a_registered_tool_replaces_the_harness_one_in_any_order(prof):
+    import importlib
+    from resident.tools import registry
+    harness_timers = importlib.import_module("resident.wake.timers")
+    registry.register("set_timer", "private", "Private timers.",
+                      {"type": "object", "properties": {}, "required": []},
+                      lambda a, c: {"content": "private"})
+    importlib.reload(harness_timers)            # the harness module imported after
+    assert registry.TOOLS["set_timer"].group == "private"
+    registry._REPLACED.discard("set_timer")     # leave the harness as it was
+    importlib.reload(harness_timers)
+    assert registry.TOOLS["set_timer"].group == "timers"

@@ -33,11 +33,18 @@ TOOLS: dict[str, Tool] = {}
 VISIBLE = {"send_message", "send_dm", "add_reaction"}
 
 
+# Tools registered from outside the harness (register(), from a profile's
+# module). They replace a harness tool of the same name whichever is
+# imported first: the profile is the more specific choice.
+_REPLACED: set[str] = set()
+
+
 def tool(group: str, name: str, description: str, required=(), **properties):
     def deco(fn):
-        TOOLS[name] = Tool(name, group, " ".join(description.split()), {
-            "type": "object", "properties": properties,
-            "required": list(required)}, fn)
+        if name not in _REPLACED:
+            TOOLS[name] = Tool(name, group, " ".join(description.split()), {
+                "type": "object", "properties": properties,
+                "required": list(required)}, fn)
         return fn
     return deco
 
@@ -78,7 +85,9 @@ def load_all():
 
 def register(name: str, group: str, description: str, schema: dict, handler):
     """Register a tool built elsewhere (a module that wraps existing tool
-    implementations rather than declaring each with @tool)."""
+    implementations rather than declaring each with @tool). It replaces any
+    harness tool of the same name, now or when that module is imported."""
+    _REPLACED.add(name)
     TOOLS[name] = Tool(name, group, " ".join(description.split()), schema, handler)
 
 
