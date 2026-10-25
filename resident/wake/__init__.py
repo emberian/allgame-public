@@ -14,7 +14,8 @@ CLOCK_CHECK_S = 60
 
 def start_all(resident):
     from resident.wake import solitude, timers
-    timers.start(resident.state, resident.run_turn)
+    if "timers" in profile.current().tools:       # a private package may bring its own
+        timers.start(resident.state, resident.run_turn)
     if profile.current().wake.solitude:
         solitude.start(resident)
     threading.Thread(target=_clock, args=(resident,), daemon=True, name="clock").start()
