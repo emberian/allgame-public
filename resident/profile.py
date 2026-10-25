@@ -45,6 +45,9 @@ class Prompt:
     # shown the new version on its next turn.
     files: list[str] = field(default_factory=list)
     file_chars: int = 4000
+    # How much of the scratchpad (0: all of it) and the journal's tail.
+    scratchpad_chars: int = 0
+    journal_chars: int = 12_000
     # Notes on people (people/<name>.md) for whoever is talking in the room.
     people: bool = True
     # Messages containing any of these are kept out of everything the model

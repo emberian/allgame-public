@@ -8,7 +8,7 @@ each turn's own header instead (resident.py).
 
 from resident import profile
 from resident.util import room_file, safe_filename
-from resident.config import JOURNAL_TAIL_CHARS, STREAM_ACTIVITY_CHARS, TOPIC_HISTORY_CHARS
+from resident.config import STREAM_ACTIVITY_CHARS, TOPIC_HISTORY_CHARS
 
 HOW_IT_WORKS = """## How talking works here
 
@@ -48,8 +48,8 @@ on repeat, or as a watch that wakes you only when the room has news.
 Your state directory holds plain files you read and write with your tools:
 scratchpad.md (loaded every turn), journal.md (its tail is loaded),
 people/<name>.md, and the logs of every room you've seen. What ends up in
-them is your own doing. When a conversation goes quiet for an hour, a short
-note about it is written for you, and loaded the next time you're there. A
+them is your own doing. When a conversation goes quiet, a short note about
+it is written for you, and loaded the next time you're there. A
 room's older history, past what you see raw, is folded into <room_memory>.
 """
 
@@ -65,12 +65,15 @@ class Prompts:
             text = (self.state.read_file(name) or "").strip()
             if text:
                 parts.append(f'<file name="{name}">\n{text[-p.prompt.file_chars:]}\n</file>')
-        scratch = self.state.read_file("scratchpad.md")
+        scratch = (self.state.read_file("scratchpad.md") or "").strip()
         if scratch:
-            parts.append(f"<scratchpad>\n{scratch.strip()}\n</scratchpad>")
+            if p.prompt.scratchpad_chars:
+                scratch = scratch[-p.prompt.scratchpad_chars:]
+            parts.append(f"<scratchpad>\n{scratch}\n</scratchpad>")
         journal = self.state.read_file("journal.md") or ""
         if len(journal.strip()) > len("# Journal"):
-            parts.append(f"<journal_tail>\n{journal[-JOURNAL_TAIL_CHARS:].strip()}\n</journal_tail>")
+            parts.append(f"<journal_tail>\n{journal[-p.prompt.journal_chars:].strip()}"
+                         "\n</journal_tail>")
         if cold:
             from resident.memory.distill import room_memory
             memory = room_memory(self.state, stream, topic)

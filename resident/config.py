@@ -17,7 +17,6 @@ BURST_SWEEP_INTERVAL = 2.0
 TOPIC_HISTORY_CHARS = 40_000        # a cold start's view of the room
 STREAM_ACTIVITY_CHARS = 8_000       # other topics in the same stream
 INTERIM_MESSAGES_CHARS = 8_000      # what was said between two turns
-JOURNAL_TAIL_CHARS = 12_000
 
 # One turn may call tools this many times.
 MAX_TOOL_TURNS = 30
