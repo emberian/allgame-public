@@ -18,11 +18,11 @@ that every resident reads and writes:
 
 import fcntl
 import json
-from pathlib import Path
 import logging
 import os
 from contextlib import contextmanager
 from datetime import datetime, timezone
+from pathlib import Path
 
 from resident import profile
 from resident.floor import SHARED_DIR, same
