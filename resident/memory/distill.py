@@ -26,7 +26,7 @@ import threading
 import time
 
 from resident import llm, profile
-from resident.util import safe_filename
+from resident.util import safe_filename, withheld
 
 logger = logging.getLogger("distill")
 
@@ -100,6 +100,9 @@ def distill_log(state, log_rel: str) -> bool:
         try:
             row = json.loads(lines[i])
         except ValueError:
+            end = i + 1
+            continue
+        if withheld(row.get("content", "")):
             end = i + 1
             continue
         text = _render(row)

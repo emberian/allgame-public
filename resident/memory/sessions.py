@@ -2,7 +2,8 @@
 
 A session holds the Agent SDK session id for its room, so consecutive turns
 resume the same conversation (and reuse its prompt cache) instead of
-rebuilding context each time. After SESSION_TTL of quiet it ends; ended
+rebuilding context each time. After the profile's session_ttl_minutes of
+quiet it ends; ended
 sessions are parked in a graveyard so the session-notes writer can summarize
 them before they are forgotten.
 """
@@ -12,9 +13,14 @@ import threading
 import time
 from dataclasses import dataclass, field
 
-from resident.config import SESSION_MAX_COUNT, SESSION_TTL
+from resident import profile
+from resident.config import SESSION_MAX_COUNT
 
 logger = logging.getLogger("sessions")
+
+
+def _ttl() -> float:
+    return profile.current().engine.session_ttl_minutes * 60
 
 
 @dataclass
@@ -47,7 +53,7 @@ class Sessions:
     def get(self, stream: str, topic: str) -> Session | None:
         with self._lock:
             s = self._by_room.get((stream, topic))
-            if s and s.idle > SESSION_TTL:
+            if s and s.idle > _ttl():
                 self._ended.append(self._by_room.pop((stream, topic)))
                 return None
             return s
@@ -73,7 +79,7 @@ class Sessions:
     def drain_ended(self) -> list[Session]:
         """Expire idle sessions and hand back everything that has ended."""
         with self._lock:
-            for k in [k for k, s in self._by_room.items() if s.idle > SESSION_TTL]:
+            for k in [k for k, s in self._by_room.items() if s.idle > _ttl()]:
                 self._ended.append(self._by_room.pop(k))
             out, self._ended = self._ended, []
         return out

@@ -1,9 +1,8 @@
 """Harness constants: the same for every resident. Per-resident settings live
 in the profile (resident/profile.py)."""
 
-# Sessions: a room's conversation stays warm this long after its last turn.
-# Matches the prompt cache's 1h lifetime, so a warm session is a cached one.
-SESSION_TTL = 3600
+# Sessions in memory at once (their lifetime is the profile's
+# engine.session_ttl_minutes).
 SESSION_MAX_COUNT = 20
 
 # Before a turn: a beat for the human to see their own message land, then

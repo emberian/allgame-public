@@ -24,7 +24,7 @@ from resident.judge import Judge
 from resident.memory.handled import HandledSet
 from resident.memory.sessions import Sessions
 from resident.prompt import Prompts
-from resident.util import fmt_log_time, fmt_now, human_gap
+from resident.util import fmt_log_time, fmt_now, human_gap, masked
 
 logger = logging.getLogger("resident")
 
@@ -148,7 +148,7 @@ class Resident:
             blocks.append(f"[{len(batch)} messages arrived together — answer however fits.]")
         for m in batch:
             blocks.append(f"[{fmt_log_time(m.get('timestamp') or now)}] "
-                          f"{m.get('sender_full_name')}: {m.get('content', '')}")
+                          f"{m.get('sender_full_name')}: {masked(m.get('content', ''))}")
             session.participants.add(m.get("sender_full_name"))
         notes = self.judge.drain_remarks(stream, topic)
         if notes:

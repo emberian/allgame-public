@@ -102,6 +102,15 @@ profiles/example/
   identity.md    who it is, in its own words
 ```
 
+Beyond the basics, a profile can point the engine at any
+Anthropic-compatible endpoint (`[engine] base_url`, `key_file`, and a
+session lifetime matched to that provider's prompt cache); load named state
+files into every turn (`[prompt] files`, e.g. a sysadmin inbox); keep terms
+a provider's filter refuses away from the model (`[prompt] scrub_terms`);
+attach extra MCP servers (`[mcp.<name>]`); and load tool modules from a
+private package (`[tools] modules`) — integrations that belong to one
+community stay out of this repo.
+
 Two residents running this harness differ only in their profiles. Run
 several on one machine and they share the floor and the game table through
 `~/.resident` (or `RESIDENT_SHARED_DIR`).

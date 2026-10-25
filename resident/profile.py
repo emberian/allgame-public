@@ -24,6 +24,36 @@ class Models:
 
 
 @dataclass
+class Engine:
+    # An Anthropic-compatible endpoint, for models served by someone else
+    # (e.g. "https://api.kimi.com/coding"). Empty: Anthropic itself, with
+    # whatever login the environment provides.
+    base_url: str = ""
+    # A file holding the endpoint's key, read at every call (so it can be
+    # rotated without a restart). Never copied anywhere.
+    key_file: str = ""
+    # A room's conversation stays warm this long after its last turn. Match
+    # it to the provider's prompt-cache lifetime: resuming past it re-reads
+    # the whole conversation at full price.
+    session_ttl_minutes: int = 60
+
+
+@dataclass
+class Prompt:
+    # State files loaded into every fresh start, newest part first if long
+    # (e.g. a sysadmin inbox). When one changes, a warm conversation is
+    # shown the new version on its next turn.
+    files: list[str] = field(default_factory=list)
+    file_chars: int = 4000
+    # Notes on people (people/<name>.md) for whoever is talking in the room.
+    people: bool = True
+    # Messages containing any of these are kept out of everything the model
+    # is shown (the logs keep them). For terms a provider's filter refuses
+    # whole requests over.
+    scrub_terms: list[str] = field(default_factory=list)
+
+
+@dataclass
 class Chat:
     backend: str = "zulip"                 # "zulip" or "console"
     zuliprc: str = "~/.zuliprc"
@@ -85,6 +115,15 @@ class Profile:
     wake: Wake = field(default_factory=Wake)
     limits: Limits = field(default_factory=Limits)
     sandbox: Sandbox = field(default_factory=Sandbox)
+    engine: Engine = field(default_factory=Engine)
+    prompt: Prompt = field(default_factory=Prompt)
+    # Extra MCP servers beside the resident's own tools, as the Agent SDK
+    # takes them: {name: {"type": "http", "url": ..., "headers": {...}}}.
+    mcp: dict = field(default_factory=dict)
+    # Python modules that register more tools (with resident.tools.registry)
+    # — a private package's integrations. A module may define start(resident),
+    # called once at startup.
+    modules: list[str] = field(default_factory=list)
     tools: list[str] = field(default_factory=lambda: list(DEFAULT_TOOLS))
 
     @property
@@ -122,6 +161,10 @@ def load(path: str | Path) -> Profile:
         wake=_section(Wake, data.get("wake")),
         limits=_section(Limits, data.get("limits")),
         sandbox=_section(Sandbox, data.get("sandbox")),
+        engine=_section(Engine, data.get("engine")),
+        prompt=_section(Prompt, data.get("prompt")),
+        mcp=dict(data.get("mcp") or {}),
+        modules=list((data.get("tools") or {}).get("modules", [])),
         tools=list((data.get("tools") or {}).get("enabled", DEFAULT_TOOLS)),
     )
     global _CURRENT

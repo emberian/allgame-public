@@ -1,6 +1,6 @@
 """Session notes: when a conversation ends, the resident gets a note about it.
 
-A session ends after SESSION_TTL of quiet (or when it is evicted). A
+A session ends after the profile's session lifetime of quiet (or when it is evicted). A
 background thread collects ended sessions and has the memory model write a
 short first-person note — who was there, what happened, what was promised,
 what is still open — appended to sessions/<room>.md. A cold start in that

@@ -21,7 +21,7 @@ import threading
 from datetime import datetime, timezone
 from pathlib import Path
 
-from resident.util import fmt_log_time, safe_filename
+from resident.util import fmt_log_time, safe_filename, withheld
 
 SEED_FILES = {
     "scratchpad.md": "# Scratchpad\n\nWorking notes. Loaded into every turn.\n",
@@ -93,9 +93,11 @@ class StateManager:
         out = []
         for line in p.read_text().splitlines():
             try:
-                out.append(json.loads(line))
+                row = json.loads(line)
             except ValueError:
                 continue
+            if not withheld(row.get("content", "")):
+                out.append(row)
         return out
 
     @staticmethod
@@ -131,7 +133,7 @@ class StateManager:
                     r = json.loads(line)
                 except ValueError:
                     continue
-                if r.get("topic") != exclude_topic:
+                if r.get("topic") != exclude_topic and not withheld(r.get("content", "")):
                     rows.append(r)
         rows.sort(key=lambda r: r["ts"])
         out, used = [], 0

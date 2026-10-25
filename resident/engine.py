@@ -27,6 +27,7 @@ import json
 import logging
 import threading
 import time
+from datetime import datetime, timezone
 
 from resident import llm, profile
 from resident.tools import registry
@@ -87,6 +88,25 @@ class Engine:
             return handler
         return create_sdk_mcp_server(name="resident", tools=[make(t) for t in self.tools])
 
+    # ---- the archive ------------------------------------------------------------
+
+    def _archive(self, key, session, said, thought, tools):
+        """One line per model run in api_archive.jsonl: what the resident
+        thought, said and called — the only record of its thinking. Never
+        trimmed (the log is the resident's own history)."""
+        try:
+            p = profile.current()
+            stream, topic = key.split(">", 1)
+            self.r.state.append_file("api_archive.jsonl", json.dumps({
+                "ts": datetime.now(timezone.utc).isoformat(), "key": key,
+                "stream": stream, "topic": topic, "sender": p.name,
+                "engine": "agent_sdk", "model": p.models.main,
+                "session": session.sdk_session_id, "tools": tools,
+                "thinking": thought[-20_000:], "text": said[-8_000:]},
+                ensure_ascii=False) + "\n")
+        except Exception as e:
+            logger.warning(f"archive write failed: {e}")
+
     # ---- persistent rooms -----------------------------------------------------
 
     def _bindings(self) -> dict:
@@ -129,7 +149,8 @@ class Engine:
                     logger.info(f"Rebirth for {key} ({bound.get('context_tokens'):,} tokens)")
                 birth = self.r.prompts.birth(stream, topic)
         cold = not session.sdk_session_id
-        system = self.r.prompts.system(stream, topic, cold=cold and not birth)
+        system = self.r.prompts.system(stream, topic, cold=cold and not birth,
+                                       people=session.participants)
         text = (birth + "\n\n" if birth else "") + prompt_text
         if not quiet:
             text += "\n\n[send_message to reply]"
@@ -141,11 +162,13 @@ class Engine:
         from claude_agent_sdk import ClaudeAgentOptions
         opts = ClaudeAgentOptions(
             system_prompt=system, model=p.models.main, fallback_model=p.models.fallback,
-            max_turns=self.r.max_tool_turns, mcp_servers={"resident": self.server},
-            tools=[], allowed_tools=[f"mcp__resident__{t.name}" for t in self.tools],
+            max_turns=self.r.max_tool_turns,
+            mcp_servers={**p.mcp, "resident": self.server},
+            tools=[], allowed_tools=[f"mcp__resident__{t.name}" for t in self.tools]
+            + [f"mcp__{name}" for name in p.mcp],
             permission_mode="bypassPermissions", setting_sources=[],
             resume=session.sdk_session_id or None, cwd=str(llm.sdk_home()),
-            max_buffer_size=32_000_000, env={"CLAUDE_CONFIG_DIR": str(llm.sdk_home())})
+            max_buffer_size=32_000_000, env=llm.sdk_env(p.models.main))
         try:
             try:
                 said = asyncio.run(self._run(text, opts, session, key))
@@ -178,13 +201,16 @@ class Engine:
 
     async def _run(self, text, opts, session, key) -> str:
         from claude_agent_sdk import AssistantMessage, ResultMessage, query
-        said = []
+        said, thought, tools = [], [], []
         async for msg in query(prompt=text, options=opts):
             self.last_progress = time.time()
             if isinstance(msg, AssistantMessage):
                 for b in msg.content:
-                    if getattr(b, "text", None) is not None and not hasattr(b, "thinking") \
-                            and not getattr(b, "name", None):
+                    if getattr(b, "thinking", None):
+                        thought.append(b.thinking)
+                    elif getattr(b, "name", None):
+                        tools.append(b.name)
+                    elif getattr(b, "text", None) is not None:
                         said.append(b.text)
                 # One model call's context, never the turn's summed usage.
                 u = getattr(msg, "usage", None)
@@ -195,6 +221,7 @@ class Engine:
             elif isinstance(msg, ResultMessage):
                 if msg.session_id:
                     session.sdk_session_id = msg.session_id
+                self._archive(key, session, "\n".join(said), "\n".join(thought), tools)
                 logger.info(f"Turn done in #{key}: {msg.num_turns} steps, "
                             f"{msg.duration_api_ms}ms")
                 if msg.is_error:

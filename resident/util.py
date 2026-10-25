@@ -11,6 +11,28 @@ def safe_filename(name: str) -> str:
     return s[:120] or "_"
 
 
+def _scrub_terms() -> list[str]:
+    try:
+        from resident import profile
+        return [t.lower() for t in profile.current().prompt.scrub_terms]
+    except RuntimeError:
+        return []
+
+
+def withheld(text: str) -> bool:
+    """True if the text carries a term the profile keeps from the model."""
+    low = (text or "").lower()
+    return any(t in low for t in _scrub_terms())
+
+
+def masked(text: str) -> str:
+    """The text with the profile's withheld terms blanked out."""
+    import re
+    for t in _scrub_terms():
+        text = re.sub(re.escape(t), "[…]", text, flags=re.IGNORECASE)
+    return text
+
+
 def room_file(stream: str, topic: str) -> str:
     """One filename per room, for files kept per (stream, topic)."""
     return f"{safe_filename(stream)}__{safe_filename(topic)}"

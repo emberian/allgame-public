@@ -7,7 +7,7 @@ each turn's own header instead (resident.py).
 """
 
 from resident import profile
-from resident.util import room_file
+from resident.util import room_file, safe_filename
 from resident.config import JOURNAL_TAIL_CHARS, STREAM_ACTIVITY_CHARS, TOPIC_HISTORY_CHARS
 
 HOW_IT_WORKS = """## How talking works here
@@ -58,9 +58,13 @@ class Prompts:
     def __init__(self, state):
         self.state = state
 
-    def system(self, stream: str, topic: str, cold: bool) -> str:
+    def system(self, stream: str, topic: str, cold: bool, people=()) -> str:
         p = profile.current()
         parts = [HOW_IT_WORKS, p.identity.strip()]
+        for name in p.prompt.files:
+            text = (self.state.read_file(name) or "").strip()
+            if text:
+                parts.append(f'<file name="{name}">\n{text[-p.prompt.file_chars:]}\n</file>')
         scratch = self.state.read_file("scratchpad.md")
         if scratch:
             parts.append(f"<scratchpad>\n{scratch.strip()}\n</scratchpad>")
@@ -81,6 +85,12 @@ class Prompts:
             nearby = self.state.stream_activity(stream, STREAM_ACTIVITY_CHARS, exclude_topic=topic)
             if nearby:
                 parts.append(f'<elsewhere_in stream="{stream}">\n{nearby}\n</elsewhere_in>')
+            if p.prompt.people:
+                for who in sorted(x for x in people if x and x.lower() != p.bot_name):
+                    note = self.state.read_file(f"people/{safe_filename(who)}.md")
+                    if note:
+                        parts.append(f'<person_notes name="{who}">\n'
+                                     f"{note[-2000:].strip()}\n</person_notes>")
             notes = self.state.read_file(f"sessions/{room_file(stream, topic)}.md")
             if notes:
                 parts.append(f"<your_notes_on_this_room>\n{notes[-6000:].strip()}\n"

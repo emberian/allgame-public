@@ -62,10 +62,24 @@ MODULES = ("messaging", "state_files", "search", "web", "games", "timers",
 
 
 def load_all():
-    """Import every tool module so its @tool declarations register."""
+    """Import every tool module so its @tool declarations register: the
+    harness's own, then any the profile names (a private package's)."""
     import importlib
+    from resident import profile
     for m in MODULES:
         importlib.import_module(f"resident.tools.{m}")
+    try:
+        extra = profile.current().modules
+    except RuntimeError:
+        extra = []
+    for m in extra:
+        importlib.import_module(m)
+
+
+def register(name: str, group: str, description: str, schema: dict, handler):
+    """Register a tool built elsewhere (a module that wraps existing tool
+    implementations rather than declaring each with @tool)."""
+    TOOLS[name] = Tool(name, group, " ".join(description.split()), schema, handler)
 
 
 def enabled(groups: list[str]) -> list[Tool]:

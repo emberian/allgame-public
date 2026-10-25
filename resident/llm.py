@@ -8,6 +8,7 @@ CLAUDE_CODE_OAUTH_TOKEN the environment provides).
 
 import asyncio
 import logging
+from pathlib import Path
 
 from resident import profile
 
@@ -36,13 +37,30 @@ def sdk_home():
     return p
 
 
+def sdk_env(model: str) -> dict:
+    """The environment every Agent SDK call runs with. For a foreign
+    endpoint: its URL and key, and no Anthropic credentials that would
+    outrank them."""
+    p = profile.current()
+    env = {"CLAUDE_CONFIG_DIR": str(sdk_home())}
+    if p.engine.base_url:
+        key = ""
+        if p.engine.key_file:
+            key = Path(p.engine.key_file).expanduser().read_text().strip()
+        env.update(ANTHROPIC_BASE_URL=p.engine.base_url, ANTHROPIC_AUTH_TOKEN=key,
+                   ANTHROPIC_API_KEY="", CLAUDE_CODE_OAUTH_TOKEN="",
+                   ANTHROPIC_MODEL=model,
+                   ANTHROPIC_SMALL_FAST_MODEL=p.models.judge)
+    return env
+
+
 async def _run(prompt: str, system: str, model: str) -> str:
     from claude_agent_sdk import (AssistantMessage, ClaudeAgentOptions,
                                   ResultMessage, query)
     options = ClaudeAgentOptions(
         system_prompt=system or None, model=model, max_turns=1, tools=[],
         permission_mode="bypassPermissions", setting_sources=[],
-        cwd=str(sdk_home()), env={"CLAUDE_CONFIG_DIR": str(sdk_home())})
+        cwd=str(sdk_home()), env=sdk_env(model))
     parts, failure = [], None
     async for msg in query(prompt=prompt, options=options):
         if isinstance(msg, AssistantMessage):
