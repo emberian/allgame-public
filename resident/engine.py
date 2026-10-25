@@ -166,6 +166,7 @@ class Engine:
             mcp_servers={**p.mcp, "resident": self.server},
             tools=[], allowed_tools=[f"mcp__resident__{t.name}" for t in self.tools]
             + [f"mcp__{name}" for name in p.mcp],
+            disallowed_tools=list(p.disallowed_tools),
             permission_mode="bypassPermissions", setting_sources=[],
             resume=session.sdk_session_id or None, cwd=str(llm.sdk_home()),
             max_buffer_size=32_000_000, env=llm.sdk_env(p.models.main))

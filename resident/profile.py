@@ -124,6 +124,8 @@ class Profile:
     # — a private package's integrations. A module may define start(resident),
     # called once at startup.
     modules: list[str] = field(default_factory=list)
+    # Tools (e.g. "mcp__search__delete") the model must never be offered.
+    disallowed_tools: list[str] = field(default_factory=list)
     tools: list[str] = field(default_factory=lambda: list(DEFAULT_TOOLS))
 
     @property
@@ -165,6 +167,7 @@ def load(path: str | Path) -> Profile:
         prompt=_section(Prompt, data.get("prompt")),
         mcp=dict(data.get("mcp") or {}),
         modules=list((data.get("tools") or {}).get("modules", [])),
+        disallowed_tools=list((data.get("tools") or {}).get("disallowed", [])),
         tools=list((data.get("tools") or {}).get("enabled", DEFAULT_TOOLS)),
     )
     global _CURRENT

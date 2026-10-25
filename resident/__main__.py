@@ -64,6 +64,11 @@ def main():
     wake.start_all(resident)
     notes.start(resident)
     distill.start(state)
+    import importlib
+    for name in p.modules:                  # a private package's own threads
+        start = getattr(importlib.import_module(name), "start", None)
+        if start:
+            start(resident)
 
     from resident import loop
     if args.console:

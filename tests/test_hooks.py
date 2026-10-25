@@ -118,8 +118,9 @@ url = "https://search.example/mcp"
 [tools]
 enabled = ["state"]
 modules = ["private_ext"]
+disallowed = ["mcp__search__delete"]
 ''')
     p = profile.load(tmp_path)
     assert p.engine.session_ttl_minutes == 30 and p.prompt.files == ["sysadmin_inbox.md"]
     assert p.mcp["search"]["url"] == "https://search.example/mcp"
-    assert p.modules == ["private_ext"]
+    assert p.modules == ["private_ext"] and p.disallowed_tools == ["mcp__search__delete"]
