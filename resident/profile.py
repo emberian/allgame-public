@@ -20,7 +20,9 @@ class Models:
     main: str = "claude-opus-5-5"          # conversation turns
     fallback: str = "claude-sonnet-5-5"    # when the main model is unavailable
     judge: str = "claude-haiku-5-5"        # "should I speak?" — cheap and fast
-    memory: str = "claude-opus-5-5"      # session notes
+    # Session notes and room memory. Empty: the main model, so what the
+    # resident reads as its own notes is its own model's writing.
+    memory: str = ""
 
 
 @dataclass
@@ -151,6 +153,13 @@ def _section(cls, raw: dict | None):
     return cls(**raw)
 
 
+def _models(raw: dict | None) -> Models:
+    m = _section(Models, raw)
+    if not m.memory:
+        m.memory = m.main
+    return m
+
+
 def load(path: str | Path) -> Profile:
     """Load `<dir>/profile.toml` (or a .toml path directly)."""
     path = Path(path).expanduser()
@@ -165,7 +174,7 @@ def load(path: str | Path) -> Profile:
         dir=toml.parent,
         state_dir=Path(r.get("state_dir", f"~/{r['name'].lower()}_state")).expanduser(),
         identity=identity_file.read_text() if identity_file.exists() else "",
-        models=_section(Models, data.get("models")),
+        models=_models(data.get("models")),
         chat=_section(Chat, data.get("chat")),
         wake=_section(Wake, data.get("wake")),
         limits=_section(Limits, data.get("limits")),

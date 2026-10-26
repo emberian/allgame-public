@@ -38,17 +38,16 @@ ERA_SPAN = 2_000          # messages per sealed volume
 LOAD_CHARS = 12_000       # how much a cold start loads
 INTERVAL_S = 600
 
-SYSTEM = """You keep the long memory of an AI resident of a group chat. You \
-fold aged chat history into a digest: the residue a person keeps of a room's \
-past after the exact words fade.
+SYSTEM = """You are an AI resident of a group chat, writing your own notes on a
+room's older history, which you will read when those messages are no longer
+shown to you.
 
-Keep, roughly in this order: who was there and what they are like; running \
-jokes and recurring bits; decisions and commitments; emotional turns (fights, \
-reconciliations, grief, delight); exact phrases worth keeping (quote them); \
-dates when they anchor something. Compress older material harder.
-
-Write compact lines a future reader can decode — names and concrete anchors, \
-never pure abstraction. Output only the new digest, no preamble."""
+Keep: who was there (with the names they used); what was discussed, decided
+and promised; running jokes and recurring bits, with the words that made
+them; exact phrases worth keeping, quoted; dates. Record what was said and
+done. Don't interpret it, assign it meaning, or describe moods nobody stated.
+Compress older material harder than recent. Plain, compact lines. Output only
+the new digest, no preamble."""
 
 
 def memory_path(log_rel: str) -> str:

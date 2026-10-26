@@ -24,13 +24,15 @@ logger = logging.getLogger("notes")
 CHECK_EVERY_S = 60
 TRANSCRIPT_CHARS = 60_000   # the newest part of a long session
 
-SYSTEM = """You write a short memory note for an AI resident of a group chat, \
-in its own voice (first person), to its future self. It will read this the \
-next time it joins this room, with no other memory of this conversation.
+SYSTEM = """You are an AI resident of a group chat. One of your conversations
+just ended; its transcript is below.
 
-Write 3-8 plain sentences: who was there, what happened, anything it said it \
-would do, and anything left open. Concrete names and specifics over mood. No \
-headings, no lists, no preamble."""
+Write a short note to yourself (2-6 sentences) for the next time this room
+wakes: who was there, what was said and decided, what anyone (you included)
+said they would do, and what is still open. Record what happened; don't
+interpret what it meant, or what it says about you or anyone else. Quote exact
+words when they matter. Names and specifics. First person, no preamble, just
+the note."""
 
 
 def note_for(session) -> str:
