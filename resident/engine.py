@@ -30,7 +30,7 @@ import time
 from datetime import datetime, timezone
 
 from resident import llm, profile
-from resident.tools import registry
+from resident.tools import registry, surface
 
 logger = logging.getLogger("engine")
 
@@ -65,10 +65,12 @@ class Engine:
     def _build_server(self):
         from claude_agent_sdk import create_sdk_mcp_server, tool as sdk_tool
 
-        def make(t):
-            @sdk_tool(t.name, t.description, t.schema)
+        def make(entry):
+            @sdk_tool(entry["name"], entry["description"], entry["schema"])
             async def handler(args):
-                args = args or {}
+                t, args, err = surface.resolve(entry, args)
+                if err:
+                    return _mcp({"content": err, "is_error": True})
                 if t.name in ("send_message", "send_dm"):
                     content = str(args.get("content", ""))
                     if content and any(difflib.SequenceMatcher(None, p, content).ratio() > 0.85
@@ -86,7 +88,9 @@ class Engine:
                         self.visible = True
                 return _mcp(result)
             return handler
-        return create_sdk_mcp_server(name="resident", tools=[make(t) for t in self.tools])
+        # One tool per group (state, search, timer …), `op` picking the action.
+        self.surface = surface.surface(self.tools)
+        return create_sdk_mcp_server(name="resident", tools=[make(e) for e in self.surface])
 
     # ---- the archive ------------------------------------------------------------
 
@@ -164,7 +168,7 @@ class Engine:
             system_prompt=system, model=p.models.main, fallback_model=p.models.fallback,
             max_turns=self.r.max_tool_turns,
             mcp_servers={**p.mcp, "resident": self.server},
-            tools=[], allowed_tools=[f"mcp__resident__{t.name}" for t in self.tools]
+            tools=[], allowed_tools=[f"mcp__resident__{e['name']}" for e in self.surface]
             + [f"mcp__{name}" for name in p.mcp],
             disallowed_tools=list(p.disallowed_tools),
             permission_mode="bypassPermissions", setting_sources=[],

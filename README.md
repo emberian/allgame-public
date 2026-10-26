@@ -53,16 +53,22 @@ uv run pytest        # the whole suite; no model calls, no network
 
 ## What a resident can do
 
-| group | tools |
+The model sees one tool per kind of thing, with `op` choosing the action
+(`state(op=read, path=…)`), plus the three ways to be heard. Each action is
+its own small function underneath (`resident/tools/`), grouped for the
+model by `resident/tools/surface.py`; a private module can add actions to a
+group or new groups.
+
+| tool | ops |
 |---|---|
-| messaging | `send_message`, `send_dm`, `add_reaction` — a long message is held as a draft to trim or send as is |
-| state | read, write, edit, list and grep files in its own state directory |
-| search | `search_messages` across the chat server |
-| web | `fetch_url` |
-| games | a shared table: `game_setup`, `game_move`, `game_status` — whose turn it is is a fact in a file, not a guess |
-| timers | `set_timer` (once, repeating, or a watch that fires only when a room has news), `list_timers`, `cancel_timer` |
-| sandbox *(opt-in)* | `run_sandbox`: a throwaway Docker container with memory, CPU, process and time limits; a workspace that lasts across calls in a room; the state dir read-only at `/state` |
-| harness *(opt-in)* | `read_harness`, `edit_harness`: the resident changes its own code (see below) |
+| `send_message`, `send_dm`, `add_reaction` | how the room hears it; a long message is held as a draft to trim or send as is |
+| `state` | read, write, edit, list, grep — files in its own state directory |
+| `search` | room — messages across the chat server |
+| `web` | fetch |
+| `game` | status, move, setup — a shared table; whose turn it is is a fact in a file, not a guess |
+| `timer` | set (once, repeating, or a watch that fires only when a room has news), list, cancel |
+| `sandbox` *(opt-in)* | run — a throwaway Docker container with memory, CPU, process and time limits; a workspace that lasts across calls in a room; the state dir read-only at `/state` |
+| `read_harness`, `edit_harness` *(opt-in)* | the resident changes its own code (see below) |
 
 Memory is plain files: a scratchpad loaded every turn, a journal whose tail
 is loaded, notes on people, and every room's log, kept forever. Two

@@ -52,3 +52,39 @@ def test_timer_fires_once(ctx, state, monkeypatch):
 def test_timer_rejects_nonsense(ctx):
     assert registry.run("set_timer", {"note": "x"}, ctx).get("is_error")
     assert registry.run("set_timer", {"note": "x", "every_minutes": 0}, ctx).get("is_error")
+
+
+def test_the_model_sees_groups_with_ops(prof):
+    from resident.tools import surface
+    entries = {e["name"]: e for e in surface.surface(registry.enabled(profile.current().tools))}
+    assert {"state", "search", "web", "game", "timer", "send_message"} <= set(entries)
+    assert "read_state_file" not in entries
+    state = entries["state"]
+    assert set(state["ops"]) == {"read", "write", "edit", "list", "grep"}
+    assert state["schema"]["required"] == ["op"]
+    assert "- read: read a file (path)" in state["description"]
+
+
+def test_a_grouped_call_runs_the_action(ctx, prof):
+    from resident.tools import surface
+    entries = {e["name"]: e for e in surface.surface(registry.enabled(profile.current().tools))}
+    t, args, err = surface.resolve(entries["state"], {"op": "write", "path": "a.md", "content": "hi"})
+    assert err is None and t.name == "write_state_file"
+    assert not registry.run(t.name, args, ctx).get("is_error")
+    assert surface.resolve(entries["state"], {"op": "fly"})[2].startswith("state: op must be")
+    assert surface.resolve(entries["state"], {"op": "write", "path": "a.md"})[2] == \
+        "state(op=write) needs content."
+
+
+def test_a_module_can_declare_its_own_ops(prof):
+    from resident.tools import surface
+    registry.register("glob_files", "private", "Find files.",
+                      {"type": "object", "properties": {"pattern": {"type": "string"}},
+                       "required": ["pattern"]}, lambda a, c: {"content": "x"})
+    surface.declare("glob_files", "state", "glob", "find files by name (pattern)")
+    prof.tools = list(prof.tools) + ["private"]
+    entries = {e["name"]: e for e in surface.surface(registry.enabled(profile.current().tools))}
+    assert "glob" in entries["state"]["ops"] and "glob_files" not in entries
+    del surface._OPS["glob_files"]
+    registry.TOOLS.pop("glob_files")
+    registry._REPLACED.discard("glob_files")

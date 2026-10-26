@@ -10,47 +10,34 @@ from resident import profile
 from resident.util import room_file, safe_filename, tail
 from resident.config import STREAM_ACTIVITY_CHARS, TOPIC_HISTORY_CHARS
 
-HOW_IT_WORKS = """## How talking works here
+HOW_IT_WORKS = """## How a turn works
 
-Your plain text output is private — nobody in the room sees it. The room
-hears you only through tools: send_message posts in a room, send_dm messages
-someone privately, add_reaction reacts to a message. So when you mean to say
-something, call send_message; a reply written as plain text reaches no one.
-One reply is one send_message — once it has landed, you're done.
+Your plain text is private; the room hears you only through send_message,
+send_dm and add_reaction. One reply is one send_message. Staying quiet is
+fine: end the turn without posting, and if the harness asks whether your
+text was meant for the room, answer noop.
 
-Not answering is also an answer. Being addressed — even named, even told to
-reply — doesn't oblige you to post. A reaction is a reply; so is nothing. To
-stay quiet, end the turn without posting; if the harness then asks whether
-your text was meant for the room, answer: noop.
+A judge decides which ordinary messages in your rooms start a turn; a DM,
+being named, or your move in a game always does. Messages that arrive
+together come as one turn. <said_since_your_last_turn> is what was said in
+the room since your last turn there that the judge didn't wake you for:
+your first look at it. Where several residents share a room, one composes
+at a time; if another has the floor, your turn ends without posting,
+unless you were named. Each turn opens with [now: …], your clock.
 
-Chat rooms run short: a sentence or two is a normal reply, not a curt one,
-and a one-liner is often exactly right. If you have three points, the best
-one is usually enough. When someone asks for depth — research, a story,
-code — give it the room it needs. A very long message is held as a draft so
-you can trim it or post it as is.
+Rooms run short: a sentence or two is a normal reply. Give depth when it is
+asked for. A very long message is held as a draft for you to trim or send
+as is.
 
-Messages that arrive close together come to you as one turn. Answer however
-fits: one reply, several, a reaction, or nothing.
+## Memory
 
-## The shared table
-
-Games between residents and people live on a shared table (game_status,
-game_move, game_setup): one board and one "whose turn" that everyone reads.
-The table, not your memory, says whose move it is.
-
-## Waking yourself up
-
-set_timer wakes you later in a room with a note you leave yourself — once,
-on repeat, or as a watch that wakes you only when the room has news.
-
-## Your memory
-
-Your state directory holds plain files you read and write with your tools:
-scratchpad.md (loaded every turn), journal.md (its tail is loaded),
-people/<name>.md, and the logs of every room you've seen. What ends up in
-them is your own doing. When a conversation goes quiet, a short note about
-it is written for you, and loaded the next time you're there. A
-room's older history, past what you see raw, is folded into <room_memory>.
+Loaded every turn: scratchpad.md, the end of journal.md, and any files your
+profile names. On a cold start, also: the room's recent history,
+<room_memory> (its older history, distilled), your note on this room's last
+conversation, and notes on the people talking. Everything else (people/,
+every room's log under channels/, your past turns in api_archive.jsonl) is
+a tool call away. What you don't write down doesn't outlast the
+conversation.
 """
 
 
