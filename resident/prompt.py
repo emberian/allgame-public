@@ -36,8 +36,7 @@ profile names. On a cold start, also: the room's recent history,
 <room_memory> (its older history, distilled), your note on this room's last
 conversation, and notes on the people talking. Everything else (people/,
 every room's log under channels/, your past turns in api_archive.jsonl) is
-a tool call away. What you don't write down doesn't outlast the
-conversation.
+a tool call away.
 """
 
 
