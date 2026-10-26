@@ -227,8 +227,12 @@ class Engine:
                 if msg.session_id:
                     session.sdk_session_id = msg.session_id
                 self._archive(key, session, "\n".join(said), "\n".join(thought), tools)
+                u = msg.usage if isinstance(msg.usage, dict) else {}
                 logger.info(f"Turn done in #{key}: {msg.num_turns} steps, "
-                            f"{msg.duration_api_ms}ms")
+                            f"{msg.duration_api_ms}ms, tokens in={u.get('input_tokens', 0)} "
+                            f"cached={u.get('cache_read_input_tokens', 0)} "
+                            f"written={u.get('cache_creation_input_tokens', 0)} "
+                            f"out={u.get('output_tokens', 0)}")
                 if msg.is_error:
                     if llm.is_refusal(str(msg.result)):
                         self.refused = str(msg.result)
