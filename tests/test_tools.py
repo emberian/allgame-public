@@ -88,3 +88,23 @@ def test_a_module_can_declare_its_own_ops(prof):
     del surface._OPS["glob_files"]
     registry.TOOLS.pop("glob_files")
     registry._REPLACED.discard("glob_files")
+
+
+def test_zulip_typing_speaks_in_stream_ids():
+    from resident.chat.zulip import ZulipBackend
+
+    class FakeClient:
+        sent = []
+        def get_streams(self):
+            return {"streams": [{"name": "Lounge", "stream_id": 7}]}
+        def set_typing_status(self, payload):
+            self.sent.append(payload); return {"result": "success"}
+        def get_events(self, **k):
+            return {"events": [{"type": "typing", "op": "start", "stream_id": 7, "topic": "t"}]}
+
+    z = ZulipBackend.__new__(ZulipBackend)
+    z.client = FakeClient()
+    z.set_typing_status({"op": "start", "type": "stream", "to": "Lounge", "topic": "t"})
+    assert z.client.sent[-1] == {"op": "start", "type": "stream", "stream_id": 7, "topic": "t"}
+    ev = z.get_events("q", 0)["events"][0]
+    assert ev["stream_name"] == "Lounge"
