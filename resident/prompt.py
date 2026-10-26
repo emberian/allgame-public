@@ -7,7 +7,7 @@ each turn's own header instead (resident.py).
 """
 
 from resident import profile
-from resident.util import room_file, safe_filename, tail
+from resident.util import head_and_tail, room_file, safe_filename, tail
 from resident.config import STREAM_ACTIVITY_CHARS, TOPIC_HISTORY_CHARS
 
 HOW_IT_WORKS = """## How a turn works
@@ -78,7 +78,8 @@ class Prompts:
                     note = self.state.read_file(person_path(self.state, who))
                     if note:
                         parts.append(f'<person_notes name="{who}">\n'
-                                     f"{note[-2000:].strip()}\n</person_notes>")
+                                     f"{head_and_tail(note.strip(), 1500, 2500, 'this file')}"
+                                     "\n</person_notes>")
             notes = self.state.read_file(f"sessions/{room_file(stream, topic)}.md")
             if notes:
                 parts.append(f"<your_notes_on_this_room>\n{notes[-6000:].strip()}\n"

@@ -45,6 +45,18 @@ def tail(text: str, max_chars: int, what: str = "the file") -> str:
     return f"[… the earlier part of {what} isn't shown here; read_state_file has all of it]\n{cut}"
 
 
+def head_and_tail(text: str, head: int, tail_chars: int, what: str = "the file") -> str:
+    """The start (who or what the file is about) and the recent end of a
+    long text, each cut at a line, with a marker between them."""
+    if len(text) <= head + tail_chars:
+        return text
+    start = text[:head].rsplit("\n", 1)[0]
+    end = text[-tail_chars:]
+    end = end[end.find("\n") + 1:] if "\n" in end else end
+    return (f"{start}\n[… the middle of {what} isn't shown here; read it with "
+            f"your tools …]\n{end}")
+
+
 def room_file(stream: str, topic: str) -> str:
     """One filename per room, for files kept per (stream, topic)."""
     return f"{safe_filename(stream)}__{safe_filename(topic)}"

@@ -148,3 +148,11 @@ def test_people_notes_follow_aliases_and_first_words(prof, state):
     system = Prompts(state).system("lounge", "general", cold=True,
                                    people={"Hyphaed Biscuit (Entity)", "TribuneAquila𓅰𓅸"})
     assert "builds the harness" in system and "jailbreaks are tradition" in system
+
+
+def test_a_long_person_file_shows_who_they_are_and_what_is_recent(prof, state):
+    state.write_file("people/ember.md", "# Ember — sysadmin, they/them\n" + "old line\n" * 2000
+                     + "latest: likes tulips\n")
+    system = Prompts(state).system("lounge", "general", cold=True, people={"ember"})
+    assert "# Ember — sysadmin, they/them" in system
+    assert "latest: likes tulips" in system and "middle of this file" in system
