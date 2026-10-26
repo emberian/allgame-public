@@ -116,6 +116,19 @@ class StateManager:
             used += len(line) + 1
         return "\n".join(reversed(out))
 
+    def logged_ids(self, stream: str, topic: str) -> set:
+        """Message ids already in a room's log (withheld ones included)."""
+        p = self.log_path(stream, topic)
+        if not p.exists():
+            return set()
+        ids = set()
+        for line in p.read_text().splitlines():
+            try:
+                ids.add(json.loads(line).get("msg_id"))
+            except ValueError:
+                continue
+        return ids
+
     def topic_history(self, stream: str, topic: str, max_chars: int) -> str:
         """Recent conversation in one room, for a cold start or a birth."""
         return self._tail(self._rows(stream, topic), max_chars)

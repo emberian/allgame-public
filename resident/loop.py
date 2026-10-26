@@ -31,17 +31,25 @@ EVENTS = ["message", "typing"]
 
 
 def backfill(resident):
+    """Log what was said while the resident was down. Messages a room's log
+    already has are skipped: without that, every restart appended the last
+    BACKFILL_PER_ROOM messages of each room to its log a second time."""
+    logged: dict[tuple, set] = {}
     for stream in profile.current().chat.rooms:
         r = resident.chat.get_messages({
             "anchor": "newest", "num_before": BACKFILL_PER_ROOM, "num_after": 0,
             "narrow": [{"operator": "channel", "operand": stream}],
             "apply_markdown": False})
         for m in r.get("messages", []):
-            if m["id"] not in resident._seen_ids:
-                s, t = room_of(m)
+            if m["id"] in resident._seen_ids:
+                continue
+            s, t = room_of(m)
+            if (s, t) not in logged:
+                logged[(s, t)] = resident.state.logged_ids(s, t)
+            if m["id"] not in logged[(s, t)]:
                 resident.state.log_message(s, t, m.get("sender_full_name", "?"),
                                            m.get("content", ""), m.get("timestamp"), m["id"])
-                resident._seen_ids.add(m["id"])
+            resident._seen_ids.add(m["id"])
 
 
 def backlog(resident) -> list[dict]:

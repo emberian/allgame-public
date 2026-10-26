@@ -50,3 +50,13 @@ def test_handled_survives_restart(resident, state):
     from resident.memory.handled import HandledSet
     resident.handled.mark(4242)
     assert 4242 in HandledSet(state)
+
+
+def test_a_restart_does_not_log_history_twice(resident, chat, state):
+    from resident import loop
+    resident.handle_message(chat.say("ember", "@**Juniper** one", "lounge", "general"))
+    loop.backfill(resident)             # logs what the log is missing (the reply)
+    before = state.read_file("channels/lounge/general.jsonl").count("\n")
+    resident._seen_ids.clear()          # a new process knows nothing in memory
+    loop.backfill(resident)
+    assert state.read_file("channels/lounge/general.jsonl").count("\n") == before == 2
