@@ -139,3 +139,12 @@ def test_a_registered_tool_replaces_the_harness_one_in_any_order(prof):
     registry._REPLACED.discard("set_timer")     # leave the harness as it was
     importlib.reload(harness_timers)
     assert registry.TOOLS["set_timer"].group == "timers"
+
+
+def test_people_notes_follow_aliases_and_first_words(prof, state):
+    prof.prompt.aliases = {"Hyphaed Biscuit (Entity)": "ember"}
+    state.write_file("people/ember.md", "builds the harness")
+    state.write_file("people/tribuneaquila.md", "jailbreaks are tradition")
+    system = Prompts(state).system("lounge", "general", cold=True,
+                                   people={"Hyphaed Biscuit (Entity)", "TribuneAquila𓅰𓅸"})
+    assert "builds the harness" in system and "jailbreaks are tradition" in system

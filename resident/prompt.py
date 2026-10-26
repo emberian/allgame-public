@@ -76,7 +76,7 @@ class Prompts:
                 parts.append(f'<elsewhere_in stream="{stream}">\n{nearby}\n</elsewhere_in>')
             if p.prompt.people:
                 for who in sorted(x for x in people if x and x.lower() != p.bot_name):
-                    note = self.state.read_file(f"people/{safe_filename(who)}.md")
+                    note = self.state.read_file(person_path(self.state, who))
                     if note:
                         parts.append(f'<person_notes name="{who}">\n'
                                      f"{note[-2000:].strip()}\n</person_notes>")
@@ -95,3 +95,21 @@ class Prompts:
                 f"so far:\n{history or '(nothing yet)'}\n"
                 "</room_history_for_a_long_conversation>")
 
+
+def person_path(state, name: str) -> str:
+    """people/<file>.md for a display name: the profile's aliases, then
+    people/_aliases.json, then the name as a filename, then its first word.
+    The plain rule alone misses every handle that isn't a filename."""
+    import json
+    low = (name or "").strip().lower()
+    aliases = {k.lower(): v for k, v in profile.current().prompt.aliases.items()}
+    try:
+        own = {k.lower(): v for k, v in
+               json.loads(state.read_file("people/_aliases.json") or "{}").items()}
+    except ValueError:
+        own = {}
+    first = "".join(c for c in (low.split() or [""])[0] if c.isascii() and c.isalnum())
+    for stem in (aliases.get(low), own.get(low), safe_filename(name), safe_filename(low), first):
+        if stem and state.read_file(f"people/{stem}.md") is not None:
+            return f"people/{stem}.md"
+    return f"people/{safe_filename(name)}.md"

@@ -50,6 +50,10 @@ class Prompt:
     journal_chars: int = 12_000
     # Notes on people (people/<name>.md) for whoever is talking in the room.
     people: bool = True
+    # Display names whose notes live under another file, e.g.
+    # {"Hyphaed Biscuit (Entity)" = "ember"}. The resident can keep more in
+    # people/_aliases.json.
+    aliases: dict = field(default_factory=dict)
     # Messages containing any of these are kept out of everything the model
     # is shown (the logs keep them). For terms a provider's filter refuses
     # whole requests over.
